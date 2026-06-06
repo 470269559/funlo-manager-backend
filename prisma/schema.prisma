@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SystemUser {
+  id           Int        @id @default(autoincrement())
+  username     String     @unique @db.VarChar(50)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  nickname     String?    @db.VarChar(50)
+  roleId       Int        @map("role_id")
+  role         SystemRole @relation(fields: [roleId], references: [id])
+  isEnabled    Boolean    @default(true) @map("is_enabled")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("system_users")
+}
+
+model SystemRole {
+  id          Int              @id @default(autoincrement())
+  roleName    String           @map("role_name") @db.VarChar(50)
+  roleCode    String           @unique @map("role_code") @db.VarChar(50)
+  description String?          @db.VarChar(255)
+  isEnabled   Boolean          @default(true) @map("is_enabled")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  users       SystemUser[]
+  roleMenus   SystemRoleMenu[]
+
+  @@map("system_roles")
+}
+
+model SystemMenu {
+  id        Int              @id @default(autoincrement())
+  parentId  Int?             @map("parent_id")
+  parent    SystemMenu?      @relation("SystemMenuTree", fields: [parentId], references: [id])
+  children  SystemMenu[]     @relation("SystemMenuTree")
+  menuName  String           @map("menu_name") @db.VarChar(50)
+  path      String?          @db.VarChar(255)
+  component String?          @db.VarChar(255)
+  icon      String?          @db.VarChar(50)
+  sortOrder Int              @default(0) @map("sort_order")
+  isVisible Boolean          @default(true) @map("is_visible")
+  isEnabled Boolean          @default(true) @map("is_enabled")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  roleMenus SystemRoleMenu[]
+
+  @@map("system_menus")
+}
+
+model SystemRoleMenu {
+  id        Int        @id @default(autoincrement())
+  roleId    Int        @map("role_id")
+  menuId    Int        @map("menu_id")
+  role      SystemRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  menu      SystemMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@unique([roleId, menuId])
+  @@map("system_role_menus")
+}
