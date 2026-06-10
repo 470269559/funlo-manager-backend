@@ -65,3 +65,31 @@ model SystemRoleMenu {
   @@unique([roleId, menuId])
   @@map("system_role_menus")
 }
+
+model SystemDictionaryType {
+  id          Int                    @id @default(autoincrement())
+  dictName    String                 @map("dict_name") @db.VarChar(50)
+  dictCode    String                 @unique @map("dict_code") @db.VarChar(50)
+  description String?                @db.VarChar(255)
+  isEnabled   Boolean                @default(true) @map("is_enabled")
+  createdAt   DateTime               @default(now()) @map("created_at")
+  updatedAt   DateTime               @updatedAt @map("updated_at")
+  items       SystemDictionaryItem[]
+
+  @@map("system_dictionary_types")
+}
+
+model SystemDictionaryItem {
+  id        Int                  @id @default(autoincrement())
+  typeId    Int                  @map("type_id")
+  type      SystemDictionaryType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  itemLabel String               @map("item_label") @db.VarChar(50)
+  itemValue String               @map("item_value") @db.VarChar(50)
+  sortOrder Int                  @default(0) @map("sort_order")
+  isEnabled Boolean              @default(true) @map("is_enabled")
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+
+  @@unique([typeId, itemValue])
+  @@map("system_dictionary_items")
+}
